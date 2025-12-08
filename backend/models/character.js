@@ -24,7 +24,7 @@ const characterSchema = new mongoose.Schema(
     },
 
     creator: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: "User",            // reference to User model
       required: true
     },
