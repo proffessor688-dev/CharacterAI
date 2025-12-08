@@ -2,41 +2,27 @@ import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema(
   {
-    conversationId: {
+    characterId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Conversation",
+      ref: "Character",
       required: true,
     },
-
-    senderType: {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    sender: {
       type: String,
-      enum: ["user", "character"],
+      enum: ["user", "ai"],
       required: true,
     },
-
-    senderId: {
-      type: mongoose.Schema.Types.ObjectId,
-      refPath: "senderType", 
-      required: true,
-    },
-
     message: {
       type: String,
       required: true,
-    },
-
-    media: {
-      type: String, // could be an image/audio/video URL
-      required: false,
-    },
-
-    isEdited: {
-      type: Boolean,
-      default: false,
     },
   },
   { timestamps: true }
 );
 
-const Message = mongoose.model("Message", messageSchema);
-export default Message;
+export default mongoose.model("Message", messageSchema);

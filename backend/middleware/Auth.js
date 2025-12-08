@@ -19,6 +19,7 @@ export const verifyUser = async (req, res, next) => {
     }
 
     req.user = decoded; // store user data
+    console.log(req.user);
     next();
 
   } catch (error) {
