@@ -1,5 +1,7 @@
 import Character from "../models/character.js";
+
 export const addCharacter = async (req, res) => {
+
   if (!req.body) {
     res.status(400).json({ Message: "Body required" });
     return;
@@ -7,7 +9,6 @@ export const addCharacter = async (req, res) => {
   try {
     const {
       name,
-      avatar,
       description,
       personalityPrompt,
       creator,
@@ -19,6 +20,10 @@ export const addCharacter = async (req, res) => {
       return res.status(400).json({
         message: "name, personalityPrompt and creator are required.",
       });
+    }
+    let avatar = null;
+    if (req.file) {
+      avatar = `/uploads/${req.file.filename}`;
     }
 
     await Character.create({
@@ -80,13 +85,11 @@ export const deleteCharacter = async (req, res) => {
     // Delete character
     const character = await Character.findByIdAndDelete(id);
 
-    res.status(200).json({ 
+    res.status(200).json({
       Message: "Character Deleted Successfully.",
-      deleted: character 
+      deleted: character,
     });
-
   } catch (error) {
     res.status(500).json({ error: "Deletion failed" });
   }
 };
-
