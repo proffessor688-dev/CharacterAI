@@ -1,11 +1,11 @@
 import Character from "../models/character.js";
 
 export const addCharacter = async (req, res) => {
-
+  // Check if body exists
   if (!req.body) {
-    res.status(400).json({ Message: "Body required" });
-    return;
+    return res.status(400).json({ message: "Body required" });
   }
+
   try {
     const {
       name,
@@ -13,32 +13,39 @@ export const addCharacter = async (req, res) => {
       personalityPrompt,
       creator,
       category,
+      greeting, // Added greeting
       isPublic,
     } = req.body;
 
-    if (!name || !personalityPrompt || !creator) {
+    // Validation: greeting is now required for a good user experience
+    if (!name || !personalityPrompt || !creator || !greeting) {
       return res.status(400).json({
-        message: "name, personalityPrompt and creator are required.",
+        message: "Name, greeting, personalityPrompt, and creator are required.",
       });
     }
+
     let avatar = null;
     if (req.file) {
       avatar = `/uploads/${req.file.filename}`;
     }
 
-    await Character.create({
+    const newCharacter = await Character.create({
       name,
       avatar,
       description,
       personalityPrompt,
       creator,
       category,
+      greeting, // Save greeting
       isPublic,
     });
-    res.status(200).json({ Message: "Character Info added Successfully." });
+
+    res.status(201).json({ 
+      message: "Character Info added Successfully.", 
+      character: newCharacter 
+    });
   } catch (error) {
     console.error("Error creating character:", error.message);
-
     return res.status(500).json({
       message: "Internal server error",
       error: error.message,
@@ -48,11 +55,8 @@ export const addCharacter = async (req, res) => {
 
 export const getAllCharacter = async (req, res) => {
   try {
+    // Sort by newest first
     const characters = await Character.find({}).sort({ createdAt: -1 });
-
-    if (characters.length === 0) {
-      return res.status(404).json({ message: "No characters found" });
-    }
 
     return res.status(200).json({
       message: "Characters fetched successfully",
@@ -66,30 +70,79 @@ export const getAllCharacter = async (req, res) => {
     });
   }
 };
+
 export const deleteCharacter = async (req, res) => {
   try {
-    const id = req.params.id;
+    const { id } = req.params;
 
-    // Count total characters (optional check)
-    const count = await Character.countDocuments();
-    if (count === 0) {
-      return res.json({ Message: "No User Found" });
+    const deletedCharacter = await Character.findByIdAndDelete(id);
+
+    if (!deletedCharacter) {
+      return res.status(404).json({ message: "Character Not Found" });
     }
-
-    // Check if character exists
-    const existingCharacter = await Character.findById(id);
-    if (!existingCharacter) {
-      return res.json({ Message: "Character Not Found" });
-    }
-
-    // Delete character
-    const character = await Character.findByIdAndDelete(id);
 
     res.status(200).json({
-      Message: "Character Deleted Successfully.",
-      deleted: character,
+      message: "Character Deleted Successfully.",
+      deleted: deletedCharacter,
     });
   } catch (error) {
-    res.status(500).json({ error: "Deletion failed" });
+    res.status(500).json({ error: "Deletion failed", message: error.message });
+  }
+};
+
+export const getCharacterById = async (req, res) => {
+  try {
+    const { charId } = req.params;
+
+    const character = await Character.findById(charId);
+
+    if (!character) {
+      return res.status(404).json({ message: "Character not found" });
+    }
+
+    res.status(200).json({
+      message: "Character fetched successfully",
+      characters: character, // Kept 'characters' key for frontend compatibility
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
+export const editCharacterById = async (req, res) => {
+  try {
+    const { charId } = req.params;
+    let updateData = { ...req.body };
+
+    // Handle Image Update if a new file is uploaded
+    if (req.file) {
+      updateData.avatar = `/uploads/${req.file.filename}`;
+    }
+
+    // Ensure isPublic is treated as a boolean if it comes as a string from FormData
+    if (updateData.isPublic !== undefined) {
+      updateData.isPublic = updateData.isPublic === "true" || updateData.isPublic === true;
+    }
+
+    const updatedCharacter = await Character.findByIdAndUpdate(
+      charId,
+      { $set: updateData },
+      { new: true, runValidators: true } // runValidators ensures schema rules are followed
+    );
+
+    if (!updatedCharacter) {
+      return res.status(404).json({ message: "Character not found" });
+    }
+
+    res.status(200).json({
+      message: "Character updated successfully",
+      character: updatedCharacter,
+    });
+  } catch (error) {
+    console.error("Error updating character:", error.message);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 };

@@ -5,39 +5,43 @@ const characterSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
 
     avatar: {
-      type: String,           // image URL
-      required: true
+      type: String, // image URL
+      required: true,
     },
 
     description: {
       type: String,
-      required: true
+      required: true,
+    },
+    greeting: {
+      type: String,
+      required: true,
     },
 
     personalityPrompt: {
       type: String,
-      required: true
+      required: true,
     },
 
     creator: {
       type: String,
-      ref: "User",            // reference to User model
-      required: true
+      ref: "User", // reference to User model
+      required: true,
     },
 
     category: {
       type: String,
-      default: null
+      default: null,
     },
 
     isPublic: {
       type: Boolean,
-      default: true
-    }
+      default: true,
+    },
   },
   { timestamps: true }
 );
